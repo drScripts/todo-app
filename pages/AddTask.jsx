@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import {
   ScrollView,
   KeyboardAvoidingView,
@@ -11,13 +11,11 @@ import {
   useToast,
 } from "native-base";
 import { TouchableOpacity } from "react-native";
-import { baseApiUrl } from "../constant";
-import { UserContext } from "../Context/UserContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LoadingCentered } from "../component";
+import { Api } from "../services";
 
 const Addtask = ({ route, navigation }) => {
-  const [userState] = useContext(UserContext);
   const [isLoading, setIsLoading] = useState(false);
   const { project } = route.params;
   const toast = useToast();
@@ -37,30 +35,26 @@ const Addtask = ({ route, navigation }) => {
 
     if (title) {
       setIsLoading(true);
-      await fetch(`${baseApiUrl}/tasks`, {
-        body: data,
-        method: "POST",
+
+      const { data: responseData, status } = await Api.post("/tasks", data, {
         headers: {
-          Authorization: `Bearer ${userState?.token}`,
           "Content-Type": "application/json",
         },
-      })
-        .then((response) => response.json())
-        .then((responseData) => {
-          const { status, message } = responseData;
+      }).catch((err) => err?.response);
 
-          if (status === "created") {
-            setIsLoading(false);
-            navigation.goBack();
-          } else {
-            toast.show({
-              title: "Warning",
-              description: message,
-              background: "danger.500",
-              placement: "top",
-            });
-          }
+      setIsLoading(false);
+      const { message } = responseData;
+
+      if (status === 201) {
+        navigation.goBack();
+      } else {
+        toast.show({
+          title: "Warning",
+          description: message || "Can't connect to server !",
+          background: "danger.500",
+          placement: "top",
         });
+      }
     } else {
       toast.show({
         title: "Warning",

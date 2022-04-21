@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
   HStack,
@@ -12,12 +12,10 @@ import {
 } from "native-base";
 import { Ionicons } from "@expo/vector-icons";
 import { TouchableOpacity } from "react-native";
-import { UserContext } from "../Context/UserContext";
-import { baseApiUrl } from "../constant";
 import { LoadingCentered } from "../component";
+import { Api } from "../services";
 
 const Addproject = ({ navigation }) => {
-  const [userState] = useContext(UserContext);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
   const [state, setState] = useState({
@@ -35,42 +33,30 @@ const Addproject = ({ navigation }) => {
   const onSubmit = async () => {
     setIsLoading(true);
     const { title, description } = state;
-    const data = JSON.stringify({ title, description });
+    const dataBody = JSON.stringify({ title, description });
 
     if (title && description) {
-      await fetch(`${baseApiUrl}/projects`, {
-        method: "POST",
-        body: data,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${userState?.token}`,
-        },
-      })
-        .then((response) => response.json())
-        .then((dataResponse) => {
-          setIsLoading(false);
-          const { message, status } = dataResponse;
-
-          if (status === "created") {
-            navigation.goBack();
-          } else {
-            toast.show({
-              title: "Warning",
-              description: message,
-              background: "danger.500",
-              placement: "top",
-            });
-          }
-        })
-        .catch(() => {
-          setIsLoading(false);
-          toast.show({
-            title: "Error",
-            description: "Can't connect to server!",
-            background: "danger.500",
-            placement: "top",
-          });
+      const { data: responseData, status } = await Api.post(
+        "/projects",
+        dataBody,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).catch((err) => err?.response);
+      setIsLoading(false);
+      const { message } = responseData;
+      if (status === 201) {
+        navigation.goBack();
+      } else {
+        toast.show({
+          title: "Warning",
+          description: message || "Can't connect to server!",
+          background: "danger.500",
+          placement: "top",
         });
+      }
     } else {
       setIsLoading(false);
       toast.show({

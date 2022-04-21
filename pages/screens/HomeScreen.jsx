@@ -1,43 +1,53 @@
-import { FlatList, Box, HStack, VStack, Heading, Text, Fab } from "native-base";
-import { useContext, useState, useCallback } from "react";
+import {
+  FlatList,
+  Box,
+  HStack,
+  VStack,
+  Heading,
+  Text,
+  Fab,
+  useToast,
+} from "native-base";
+import { useState, useCallback } from "react";
 import * as Progress from "react-native-progress";
 import { Header, TaskCard, NoData, LoadingCentered } from "../../component";
-import { baseApiUrl } from "../../constant";
-import { UserContext } from "../../Context/UserContext";
 import { AntDesign } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
+import { Api } from "../../services";
 
 const HomeScreen = ({ navigation }) => {
   const [projects, setProjects] = useState([]);
   const [almostProject, setAlmostProject] = useState(null);
-  const [userState] = useContext(UserContext);
   const [isLoading, setIsLoading] = useState(false);
+  const toast = useToast();
 
   const getProjects = async () => {
     setIsLoading(true);
-    await fetch(`${baseApiUrl}/projects`, {
-      headers: {
-        Authorization: `Bearer ${userState?.token}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((responseData) => {
-        const { data, status } = responseData;
 
-        if (status === "success") {
-          const { projects } = data;
-          let countHigher = 0;
-          const almostFinished = projects?.filter((project) => {
-            const length = project?.tasks?.length;
-            if (length >= countHigher) {
-              countHigher = length;
-              return project;
-            }
-          });
-          setAlmostProject(almostFinished[0]);
-          setProjects(projects);
+    const { data: responseData, status } = await Api.get("/projects").catch(
+      (err) => err?.response
+    );
+
+    const { data, message } = responseData;
+    if (status === 200) {
+      let countHigher = 0;
+      const almostFinished = data?.projects?.filter((project) => {
+        const length = project?.tasks?.length;
+        if (length >= countHigher) {
+          countHigher = length;
+          return project;
         }
       });
+      setAlmostProject(almostFinished[0]);
+      setProjects(data?.projects);
+    } else {
+      toast.show({
+        title: "Warning",
+        description: message || "Can't connect to server",
+        background: "danger.500",
+        placement: "top",
+      });
+    }
 
     setIsLoading(false);
   };
@@ -147,6 +157,7 @@ const HomeScreen = ({ navigation }) => {
           p={3}
           numColumns={2}
           ListEmptyComponent={<NoData message={"No Project Data"} />}
+          ListFooterComponent={<Box mb={5}></Box>}
           bg={"grey.50"}
         />
       </>

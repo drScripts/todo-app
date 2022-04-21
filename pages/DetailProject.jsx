@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   HStack,
   VStack,
@@ -12,12 +12,10 @@ import {
 import * as Progress from "react-native-progress";
 import { MaterialIcons, Feather } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-import { baseApiUrl } from "../constant";
-import { UserContext } from "../Context/UserContext";
 import { Taskscards, LoadingCentered } from "../component";
+import { Api } from "../services";
 
 const Detailproject = ({ route, navigation }) => {
-  const [userState] = useContext(UserContext);
   const toast = useToast();
   const { project: currentProject } = route.params;
   const [isLoading, setIsLoading] = useState(false);
@@ -30,37 +28,47 @@ const Detailproject = ({ route, navigation }) => {
 
   const getProject = async () => {
     setIsLoading(true);
-    await fetch(`${baseApiUrl}/projects/${currentProject?.id}`, {
-      headers: {
-        Authorization: `Bearer ${userState?.token}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((responseData) => {
-        const { data, status, message } = responseData;
-        setIsLoading(false);
 
-        if (status === "created") {
-          const { project } = data;
-          setProject(project);
-        } else {
-          toast.show({
-            title: "Warning",
-            description: message,
-            background: "danger.500",
-            placement: "top",
-          });
-        }
-      })
-      .catch(() => {
-        setIsLoading(false);
-        toast.show({
-          title: "Error",
-          description: "can't connect to server!",
-          background: "danger.500",
-          placement: "top",
-        });
+    const { data: responseData, status } = await Api.get(
+      `/projects/${currentProject?.id}`
+    ).catch((err) => err?.response);
+
+    const { data, message } = responseData;
+
+    setIsLoading(false);
+    if (status === 200) {
+      setProject(data?.project);
+    } else {
+      toast.show({
+        title: "Warning",
+        description: message || "Can't connect to server",
+        background: "danger.500",
+        placement: "top",
       });
+    }
+  };
+
+  const deleteProject = async () => {
+    setIsLoading(true);
+
+    const { data: responseData, status } = await Api.delete(
+      `/projects/${project?.id}`
+    ).catch((err) => err?.response);
+
+    setIsLoading(false);
+
+    const { message } = responseData;
+
+    if (status === 201) {
+      navigation.goBack();
+    } else {
+      toast.show({
+        title: "Warning",
+        description: message || "Can't connect to server!",
+        background: "danger.500",
+        placement: "top",
+      });
+    }
   };
 
   const _getHeader = () => {
@@ -124,41 +132,6 @@ const Detailproject = ({ route, navigation }) => {
         </HStack>
       </>
     );
-  };
-
-  const deleteProject = async () => {
-    setIsLoading(true);
-    await fetch(`${baseApiUrl}/projects/${project?.id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${userState?.token}`,
-      },
-    })
-      .then((response) => response.json())
-      .then((responseData) => {
-        const { status, message } = responseData;
-        setIsLoading(false);
-
-        if (status === "created") {
-          navigation.goBack();
-        } else {
-          toast.show({
-            title: "Warning",
-            description: message,
-            background: "danger.500",
-            placement: "top",
-          });
-        }
-      })
-      .catch(() => {
-        setIsLoading(false);
-        toast.show({
-          title: "Warning",
-          description: "Can't connect to server!",
-          background: "danger.500",
-          placement: "top",
-        });
-      });
   };
 
   const _getFooter = () => {

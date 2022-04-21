@@ -9,16 +9,14 @@ import {
   Heading,
   useToast,
 } from "native-base";
-import { useState, useContext } from "react";
+import { useState } from "react";
 import { TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { baseApiUrl } from "../constant";
-import { UserContext } from "../Context/UserContext";
 import { LoadingCentered } from "../component";
+import { Api } from "../services";
 
 const Editproject = ({ route, navigation }) => {
   const { project } = route.params;
-  const [userState] = useContext(UserContext);
   const toast = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,39 +42,29 @@ const Editproject = ({ route, navigation }) => {
     if (title && description) {
       const data = JSON.stringify({ title, description });
 
-      await fetch(`${baseApiUrl}/projects/${project?.id}`, {
-        method: "PATCH",
-        body: data,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${userState?.token}`,
-        },
-      })
-        .then((response) => response.json())
-        .then((responseData) => {
-          const { status, message } = responseData;
-          setIsLoading(false);
+      const { data: responseData, status } = await Api.patch(
+        `/projects/${project?.id}`,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).catch((err) => err?.response);
 
-          if (status === "created") {
-            navigation.goBack();
-          } else {
-            toast.show({
-              title: "Warning",
-              description: message,
-              background: "danger.500",
-              placement: "top",
-            });
-          }
-        })
-        .catch(() => {
-          setIsLoading(false);
-          toast.show({
-            title: "Warning",
-            description: "Can't connect to server!",
-            background: "danger.500",
-            placement: "top",
-          });
+      setIsLoading(false);
+      const { message } = responseData;
+
+      if (status === 201) {
+        navigation.goBack();
+      } else {
+        toast.show({
+          title: "Warning",
+          description: message || "Can't connect to server!",
+          background: "danger.500",
+          placement: "top",
         });
+      }
     } else {
       setIsLoading(false);
       toast.show({

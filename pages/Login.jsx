@@ -11,10 +11,10 @@ import {
   ScrollView,
 } from "native-base";
 import React, { useState, useContext } from "react";
-import { TouchableOpacity, Platform } from "react-native";
-import { baseApiUrl } from "../constant";
+import { TouchableOpacity } from "react-native";
 import { UserContext } from "../Context/UserContext";
 import { LoadingCentered } from "../component";
+import { Api } from "../services";
 
 const Login = ({ navigation }) => {
   const [email, setEmail] = useState("");
@@ -34,44 +34,33 @@ const Login = ({ navigation }) => {
   const onSubmit = async () => {
     setIsLoading(true);
     if (email && password) {
-      await fetch(`${baseApiUrl}/login`, {
-        method: "POST",
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => response.json())
-        .then((responseData) => {
-          setIsLoading(false);
-          const { message, status, data } = responseData;
+      const bodyData = JSON.stringify({ email, password });
+      const { data: responseData, status } = await Api.post(
+        "/login",
+        bodyData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).catch((err) => err?.response);
 
-          if (status === "error" || status == "Not found!") {
-            toast.show({
-              title: "Warning",
-              description: message,
-              background: "danger.500",
-              placement: "top",
-            });
-          } else {
-            dispatch({
-              type: "USER_SUCCESS_LOGIN",
-              payload: data,
-            });
-          }
-        })
-        .catch(() => {
-          setIsLoading(false);
-          toast.show({
-            title: "Warning",
-            description: "Can't connect to server!",
-            background: "danger.500",
-            placement: "top",
-          });
+      setIsLoading(false);
+      const { data, message } = responseData;
+
+      if (status === 200) {
+        dispatch({
+          type: "USER_SUCCESS_LOGIN",
+          payload: data,
         });
+      } else {
+        toast.show({
+          title: "Warning",
+          description: message || "Can't connect to server!",
+          background: "danger.500",
+          placement: "top",
+        });
+      }
     } else {
       setIsLoading(false);
       toast.show({

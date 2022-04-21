@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import {
   ScrollView,
   KeyboardAvoidingView,
@@ -11,14 +11,12 @@ import {
   useToast,
 } from "native-base";
 import { TouchableOpacity } from "react-native";
-import { baseApiUrl } from "../constant";
-import { UserContext } from "../Context/UserContext";
 import { Ionicons } from "@expo/vector-icons";
 import { LoadingCentered } from "../component";
+import { Api } from "../services";
 
 const Edittask = ({ route, navigation }) => {
   const { task } = route.params;
-  const [userState] = useContext(UserContext);
   const [isLoading, setIsLoading] = useState(false);
   const toast = useToast();
 
@@ -35,39 +33,29 @@ const Edittask = ({ route, navigation }) => {
     const { title } = state;
     const data = JSON.stringify({ title });
     if (title) {
-      await fetch(`${baseApiUrl}/tasks/${task?.id}`, {
-        method: "PATCH",
-        body: data,
-        headers: {
-          Authorization: `Bearer ${userState?.token}`,
-          "Content-Type": "application/json",
-        },
-      })
-        .then((response) => response.json())
-        .then((responseData) => {
-          setIsLoading(false);
-          const { status, message } = responseData;
+      const { data: responseData, status } = await Api.patch(
+        `/tasks/${task?.id}`,
+        data,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      ).catch((err) => err?.response);
 
-          if (status === "created") {
-            navigation.goBack();
-          } else {
-            toast.show({
-              title: "Error",
-              description: message,
-              background: "danger.500",
-              placement: "top",
-            });
-          }
-        })
-        .catch(() => {
-          setIsLoading(false);
-          toast.show({
-            title: "Error",
-            description: "Can't connect to server!",
-            background: "danger.500",
-            placement: "top",
-          });
+      setIsLoading(false);
+
+      const { message } = responseData;
+      if (status === 201) {
+        navigation.goBack();
+      } else {
+        toast.show({
+          title: "Warning",
+          description: message || "Can't connect to server!",
+          background: "danger.500",
+          placement: "top",
         });
+      }
     } else {
       setIsLoading(false);
       toast.show({

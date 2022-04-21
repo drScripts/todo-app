@@ -1,6 +1,7 @@
 import { createContext, useReducer, useEffect } from "react";
 import { setToken, getToken, removeToken } from "../storage";
 import { baseApiUrl } from "../constant";
+import { setAuth } from "../services";
 
 export const UserContext = createContext();
 
@@ -15,6 +16,7 @@ const reducer = (state, action) => {
   switch (type) {
     case "USER_SUCCESS_LOGIN":
       setToken(payload?.token);
+      setAuth(payload?.token);
 
       return {
         ...state,
@@ -24,6 +26,7 @@ const reducer = (state, action) => {
       };
     case "USER_FAILED_LOGIN":
       removeToken();
+      setAuth(null);
       return {
         ...state,
         user: null,
@@ -37,8 +40,8 @@ const reducer = (state, action) => {
       };
     case "USER_LOGOUT":
       removeToken();
+      setAuth(null);
       return {
-        ...state,
         user: null,
         token: null,
         isLogin: false,
@@ -79,6 +82,7 @@ const UserProvider = ({ children }) => {
 
   useEffect(async () => {
     const savedToken = await getToken();
+    setAuth(savedToken);
     if (savedToken) {
       await getUserProfile(savedToken);
     }
