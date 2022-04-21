@@ -200,6 +200,7 @@ const Detailproject = ({ route, navigation }) => {
         keyExtractor={(item) => item.id}
         ListHeaderComponent={_getHeader}
         ListFooterComponent={_getFooter}
+        bg={"grey.50"}
         renderItem={({ item }) => (
           <Taskscards
             task={item}

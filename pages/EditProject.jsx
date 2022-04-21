@@ -91,7 +91,7 @@ const Editproject = ({ route, navigation }) => {
   return (
     <>
       <LoadingCentered backdrop show={isLoading} />
-      <ScrollView>
+      <ScrollView bg={"grey.50"}>
         <KeyboardAvoidingView>
           <Box flex={1}>
             <HStack
@@ -99,7 +99,7 @@ const Editproject = ({ route, navigation }) => {
               background={"grey.50"}
               px={3}
               py={5}
-              shadow={"1"}
+              shadow={"5"}
               alignItems={"center"}
               justifyContent={"space-between"}
             >

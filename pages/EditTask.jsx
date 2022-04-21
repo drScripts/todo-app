@@ -82,7 +82,7 @@ const Edittask = ({ route, navigation }) => {
   return (
     <>
       <LoadingCentered backdrop show={isLoading} />
-      <ScrollView>
+      <ScrollView bg={"grey.50"}>
         <KeyboardAvoidingView>
           <Box flex={1}>
             <HStack
@@ -90,7 +90,7 @@ const Edittask = ({ route, navigation }) => {
               background={"grey.50"}
               px={3}
               py={5}
-              shadow={"1"}
+              shadow={"5"}
               alignItems={"center"}
               justifyContent={"space-between"}
             >
@@ -103,7 +103,7 @@ const Edittask = ({ route, navigation }) => {
                   <Ionicons name="chevron-back" size={24} color="black" />
                 </Box>
               </TouchableOpacity>
-              <Heading>Add Tasks</Heading>
+              <Heading>Edit Tasks</Heading>
               <Box size={"8"}></Box>
             </HStack>
             <VStack space={3} mt={6} px={3}>

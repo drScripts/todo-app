@@ -130,7 +130,7 @@ const Profilescreen = () => {
     return <LoadingCentered />;
   } else {
     return (
-      <ScrollView>
+      <ScrollView bg={"grey.50"}>
         <KeyboardAvoidingView>
           <Box safeArea flex={1} px={3}>
             <TouchableOpacity onPress={pickImage}>

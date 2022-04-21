@@ -85,7 +85,7 @@ const Addproject = ({ navigation }) => {
   return (
     <>
       <LoadingCentered backdrop show={isLoading} />
-      <ScrollView>
+      <ScrollView bg={"grey.50"}>
         <KeyboardAvoidingView>
           <Box flex={1}>
             <HStack

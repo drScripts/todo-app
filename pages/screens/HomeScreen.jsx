@@ -147,6 +147,7 @@ const HomeScreen = ({ navigation }) => {
           p={3}
           numColumns={2}
           ListEmptyComponent={<NoData message={"No Project Data"} />}
+          bg={"grey.50"}
         />
       </>
     );
